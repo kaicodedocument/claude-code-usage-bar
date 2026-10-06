@@ -1,6 +1,6 @@
 {
   "name": "usage-bar",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "A band above the prompt: 5h and 7d rate-limit windows, session tokens and cost",
   "types": "./types/index.d.ts",
   "author": {

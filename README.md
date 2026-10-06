@@ -155,6 +155,23 @@ Set `showUpdated` to `false` to leave the mark out.
 
 To refresh on demand, send any message in any local session.
 
+## What it reads and writes
+
+Everything stays on your machine. The mod makes no network requests, reads and writes no files, runs no commands, and never sees your prompts, the model's replies or your tool calls.
+
+| It reads | From |
+| --- | --- |
+| The rate-limit windows and the session's cost | Claude Code, when a session starts and after each turn |
+| Token counts per turn: input, output, cache reads and cache writes | Claude Code, at the end of each turn |
+| The time | Claude Code's clock |
+
+| It writes | Where |
+| --- | --- |
+| The latest rate-limit reading and when it was taken | The mod's own store, kept by Claude Code on this machine, so your other sessions can show it |
+| Its running totals and whether the bar is hidden | Session state, gone when the session ends |
+
+It adds one slash command, `/usage-bar`, and draws in one place, the band above the prompt.
+
 ## Troubleshooting
 
 **The bar does not appear.** Sessions read the setting when they start, so open a new session; restart the app if a new session still has none. In the terminal, set `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1` (see [Requirements](#requirements)). Check that the path in `CLAUDE_CODE_PLUGIN_DIRS` is the folder holding `.claude-plugin/`. `claude --debug` logs a line starting `usage-bar:` when the mod fails to load.

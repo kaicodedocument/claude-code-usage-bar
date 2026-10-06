@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.6 - 2026-10-06
+
+Documentation only; the mod's behavior is unchanged.
+
+- Added a "What it reads and writes" section: the mod makes no network requests, touches no files and runs no commands.
+
 ## 0.3.5 - 2026-10-06
 
 Fixes found in a review of the code; nothing changes in normal use.
