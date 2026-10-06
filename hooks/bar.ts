@@ -1,4 +1,4 @@
-import type { Limit, Snapshot, Tokens } from '../types'
+import type { Limit, Snapshot, Counts } from '../types'
 
 const HOUR = 3_600_000
 
@@ -36,7 +36,7 @@ export type Window = {
   isStale: boolean
 }
 
-export function formatTokens(n: number): string {
+export function formatCount(n: number): string {
   if (n < 1000) {
     return String(n)
   }
@@ -95,7 +95,7 @@ export function formatAge(snapshot: Snapshot, now: number): string {
   return age < 60_000 ? 'now' : formatLeft(age)
 }
 
-export function textLine(snapshot: Snapshot, tokens: Tokens, now: number, style: Style): string {
+export function textLine(snapshot: Snapshot, counts: Counts, now: number, style: Style): string {
   const windows = ['five_hour', 'seven_day'].map(kind => {
     const w = windowOf(kind, snapshot, now, style)
 
@@ -110,9 +110,9 @@ export function textLine(snapshot: Snapshot, tokens: Tokens, now: number, style:
   return [
     ...windows,
     ...updated,
-    `in ${formatTokens(tokens.input)}`,
-    `out ${formatTokens(tokens.output)}`,
-    `cache ${formatTokens(tokens.cache)}`,
+    `in ${formatCount(counts.input)}`,
+    `out ${formatCount(counts.output)}`,
+    `cache ${formatCount(counts.cache)}`,
     formatCost(snapshot.costUsd),
   ].join(' | ')
 }
@@ -254,15 +254,15 @@ function windowParts(w: Window, icon: 'gauge' | 'calendar', color: string): Part
   ]
 }
 
-export function barSvg(snapshot: Snapshot, tokens: Tokens, now: number, style: Style): string {
+export function barSvg(snapshot: Snapshot, counts: Counts, now: number, style: Style): string {
   const { pills: colors, muted } = PALETTES[style.theme]
   // `pill` picks the palette entry; without one the parts sit on the band itself.
   const contents: { pill?: number; parts: (accent: string) => Part[]; gapAfter: number }[] = [
     { pill: 0, parts: accent => windowParts(windowOf('five_hour', snapshot, now, style), 'gauge', accent), gapAfter: 10 },
     { pill: 1, parts: accent => windowParts(windowOf('seven_day', snapshot, now, style), 'calendar', accent), gapAfter: 30 },
-    { pill: 2, parts: accent => [{ icon: 'up', color: accent }, { text: formatTokens(tokens.input), isBold: true }], gapAfter: 10 },
-    { pill: 3, parts: accent => [{ icon: 'down', color: accent }, { text: formatTokens(tokens.output), isBold: true }], gapAfter: 10 },
-    { pill: 4, parts: accent => [{ icon: 'layers', color: accent }, { text: formatTokens(tokens.cache), isBold: true }], gapAfter: 30 },
+    { pill: 2, parts: accent => [{ icon: 'up', color: accent }, { text: formatCount(counts.input), isBold: true }], gapAfter: 10 },
+    { pill: 3, parts: accent => [{ icon: 'down', color: accent }, { text: formatCount(counts.output), isBold: true }], gapAfter: 10 },
+    { pill: 4, parts: accent => [{ icon: 'layers', color: accent }, { text: formatCount(counts.cache), isBold: true }], gapAfter: 30 },
     { pill: 5, parts: accent => [{ icon: 'coin', color: accent }, { text: formatCost(snapshot.costUsd), isBold: true }], gapAfter: 0 },
   ]
 
@@ -292,6 +292,8 @@ export function barSvg(snapshot: Snapshot, tokens: Tokens, now: number, style: S
   })
   const width = x
 
+  // xmlns is the namespace identifier a standalone SVG must carry to be
+  // drawn as an image; it is a name, and nothing is requested from it.
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${HEIGHT}" viewBox="0 0 ${width} ${HEIGHT}" ` +
     `font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="${FONT}">` +

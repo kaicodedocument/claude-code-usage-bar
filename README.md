@@ -157,7 +157,7 @@ To refresh on demand, send any message in any local session.
 
 ## What it reads and writes
 
-Everything stays on your machine. The mod makes no network requests, reads and writes no files, runs no commands, and never sees your prompts, the model's replies or your tool calls.
+Everything stays on your machine. The mod makes no network requests (the one URL in its source is the SVG namespace identifier, which is a name and is never fetched), reads and writes no files, runs no commands, and never sees your prompts, the model's replies or your tool calls.
 
 | It reads | From |
 | --- | --- |

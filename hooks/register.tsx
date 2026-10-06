@@ -10,7 +10,7 @@ const snapshot = atom({ plugin: 'usage-bar', key: 'snapshot' } as const, {
   limitsAt: null,
   costUsd: null,
 })
-const tokens = atom({ plugin: 'usage-bar', key: 'tokens' } as const, {
+const counts = atom({ plugin: 'usage-bar', key: 'counts' } as const, {
   input: 0,
   output: 0,
   cache: 0,
@@ -158,7 +158,7 @@ export const register: Register = (on, options) => {
 
     if (usage !== undefined) {
       await attempt(() =>
-        update($, tokens, sum => ({
+        update($, counts, sum => ({
           input: sum.input + usage.input_tokens + (countsCacheWrites ? usage.cache_creation_input_tokens : 0),
           output: sum.output + usage.output_tokens,
           cache:
@@ -180,7 +180,7 @@ export const register: Register = (on, options) => {
 
     const now = await $.clock.now()
     const shown = await read($, snapshot)
-    const sum = await read($, tokens)
+    const sum = await read($, counts)
     const line = textLine(shown, sum, now, style)
     const hide = (
       <Button
