@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.1 - 2026-10-06
+
+Documentation only; the mod's behavior is unchanged.
+
+- Replaced the dark-palette screenshot with one that shows the reading-age mark.
+
 ## 0.3.0 - 2026-10-06
 
 - The bar now shows how long ago the rate-limit reading was taken, as a refresh mark after the `7d` pill: `now`, `3m`, `1h 5m`.

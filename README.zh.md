@@ -119,7 +119,7 @@ claude --plugin-dir ~/.claude/mods/usage-bar
 | `showUpdated` | `true` | 在 `7d` 胶囊后显示额度读数是多久之前读到的 |
 | `countCacheWrites` | `true` | `true`：向上箭头为未缓存输入加缓存写入。`false`：只算未缓存输入，缓存写入并入缓存读取一项 |
 
-设置 `"theme": "dark"` 后的效果（这张截图早于读数时间标记的加入）：
+设置 `"theme": "dark"` 后的效果：
 
 ![应用深色主题下的深色配色](docs/screenshot-dark-palette.png)
 

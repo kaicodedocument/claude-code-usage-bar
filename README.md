@@ -119,7 +119,7 @@ Options are read from `pluginConfigs` in `~/.claude/settings.json`, keyed by the
 | `showUpdated` | `true` | Show how long ago the rate-limit reading was taken, after the `7d` pill |
 | `countCacheWrites` | `true` | `true`: the up arrow is uncached input plus cache writes. `false`: it is uncached input alone, and cache writes are counted with cache reads |
 
-With `"theme": "dark"` (this screenshot predates the reading-age mark):
+With `"theme": "dark"`:
 
 ![The dark palette in the app's dark theme](docs/screenshot-dark-palette.png)
 
