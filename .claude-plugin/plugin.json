@@ -1,10 +1,46 @@
 {
   "name": "usage-bar",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A band above the prompt: 5h and 7d rate-limit windows, session tokens and cost",
   "types": "./types/index.d.ts",
   "author": {
     "name": "chenkai"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "userConfig": {
+    "theme": {
+      "type": "string",
+      "title": "Theme",
+      "description": "Pill colors: light or dark. The mod cannot read the app theme, so pick the one that matches.",
+      "default": "light",
+      "options": [
+        "light",
+        "dark"
+      ]
+    },
+    "staleMinutes": {
+      "type": "number",
+      "title": "Fade after (minutes)",
+      "description": "A rate-limit reading older than this is drawn faded.",
+      "default": 10
+    },
+    "warnBelow": {
+      "type": "number",
+      "title": "Orange at or below (%)",
+      "description": "Percent left at which a window's bar turns orange.",
+      "default": 30
+    },
+    "dangerBelow": {
+      "type": "number",
+      "title": "Red at or below (%)",
+      "description": "Percent left at which a window's bar turns red.",
+      "default": 10
+    },
+    "countCacheWrites": {
+      "type": "boolean",
+      "title": "Count cache writes as input",
+      "description": "On, the up arrow is uncached input plus cache writes. Off, it is uncached input alone and cache writes are counted with cache reads.",
+      "default": true
+    }
+  }
 }

@@ -14,15 +14,15 @@ A Claude Code mod that draws a usage bar above the prompt: what is left of the 5
 
 | Item | Meaning |
 | --- | --- |
-| `5h` / `7d` bar and `%` | Allowance left in the window |
+| `5h`, `7d` | Allowance left in the window, as a bar and a percentage |
 | Vertical mark on the bar | Share of the window's time that is left. Fill past the mark means the allowance is lasting longer than the clock |
 | Clock | Time until the window resets |
-| Up arrow | Input tokens this session: uncached input plus cache writes |
+| Up arrow | Input tokens this session: uncached input plus cache writes (see `countCacheWrites`) |
 | Down arrow | Output tokens this session |
 | Layers | Tokens read from the prompt cache this session |
 | Coin | Session cost in US dollars, as `/cost` totals it |
 
-The bar turns orange at 30% left and red at 10% left. A reading older than 10 minutes is drawn faded.
+The bar turns orange at 30% left and red at 10% left. A reading older than 10 minutes is drawn faded. All three are [configurable](#configuration).
 
 ## Requirements
 
@@ -52,6 +52,34 @@ To try it in one terminal session only:
 claude --plugin-dir ~/.claude/mods/usage-bar
 ```
 
+## Configuration
+
+Options are read from `pluginConfigs` in `~/.claude/settings.json`, keyed by the mod's name. All are optional; a new session picks up a change.
+
+```json
+{
+  "pluginConfigs": {
+    "usage-bar": {
+      "options": {
+        "theme": "dark",
+        "staleMinutes": 10,
+        "warnBelow": 30,
+        "dangerBelow": 10,
+        "countCacheWrites": true
+      }
+    }
+  }
+}
+```
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `theme` | `"light"` | `"light"` or `"dark"` pill colors. The mod cannot read the app's theme, so set the one that matches |
+| `staleMinutes` | `10` | A rate-limit reading older than this is drawn faded |
+| `warnBelow` | `30` | Percent left at which a window's bar turns orange |
+| `dangerBelow` | `10` | Percent left at which a window's bar turns red |
+| `countCacheWrites` | `true` | `true`: the up arrow is uncached input plus cache writes. `false`: it is uncached input alone, and cache writes are counted with cache reads |
+
 ## Hide and show
 
 - Press `×` at the right end of the bar to hide it. Hidden, it takes no space.
@@ -73,8 +101,8 @@ The choice lasts for the session; a new session starts with the bar shown.
 
 - The rate-limit figures come from the last model response, not from a live query. Sessions share their latest reading through the mod's store and pick it up within a minute, but usage on claude.ai or the mobile app is not seen until a local session gets a response.
 - Token counts start when the mod loads; turns before that are not counted.
-- Pill colors are fixed and do not follow the dark theme.
-- Nothing is configurable yet: colors and thresholds are constants in `hooks/bar.ts`.
+- The mod cannot detect the app's theme; the dark palette is chosen by hand with the `theme` option.
+- Individual colors are not configurable; the two palettes are constants in `hooks/bar.ts`.
 
 ## Develop
 

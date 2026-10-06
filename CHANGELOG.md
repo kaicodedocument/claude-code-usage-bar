@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.2.0 - 2026-10-06
+
+- Added options, set under `pluginConfigs` in `~/.claude/settings.json`: `theme`, `staleMinutes`, `warnBelow`, `dangerBelow` and `countCacheWrites`.
+- Added a dark palette, chosen with `theme: "dark"`.
+- With no options set the bar draws exactly as in 0.1.1.
+
 ## 0.1.1 - 2026-10-06
 
 Documentation only; the mod's behavior is unchanged.

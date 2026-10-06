@@ -1,8 +1,23 @@
 import type { Limit, Snapshot, Tokens } from '../types'
 
 const HOUR = 3_600_000
-// A reading older than this is drawn faded: the session has been idle since.
-export const STALE_AFTER = 10 * 60_000
+
+// What the person may set through the mod's options; `styleOf` fills these in.
+export type Style = {
+  theme: 'light' | 'dark'
+  // A reading older than this is drawn faded: the session has been idle since.
+  staleAfterMs: number
+  // At or below these percentages left, the bar is drawn orange, then red.
+  warnBelow: number
+  dangerBelow: number
+}
+
+export const DEFAULT_STYLE: Style = {
+  theme: 'light',
+  staleAfterMs: 10 * 60_000,
+  warnBelow: 30,
+  dangerBelow: 10,
+}
 const WINDOWS: Record<string, { label: string; ms: number }> = {
   five_hour: { label: '5h', ms: 5 * HOUR },
   seven_day: { label: '7d', ms: 7 * 24 * HOUR },
@@ -38,7 +53,7 @@ export function formatLeft(ms: number): string {
   return hours > 0 ? `${hours}h ${minutes % 60}m` : `${minutes}m`
 }
 
-export function windowOf(kind: string, snapshot: Snapshot, now: number): Window {
+export function windowOf(kind: string, snapshot: Snapshot, now: number, style: Style): Window {
   const { limits, limitsAt } = snapshot
   const { label, ms } = WINDOWS[kind] ?? { label: kind, ms: 0 }
   const limit = limits.find(one => one.kind === kind)
@@ -55,7 +70,7 @@ export function windowOf(kind: string, snapshot: Snapshot, now: number): Window 
     percent: Math.max(0, 100 - Math.round(limit.percentUsed)),
     timeLeft: hasReset ? Math.min(1, Math.max(0, resetsIn / ms)) : null,
     left: hasReset ? formatLeft(resetsIn) : '--',
-    isStale: limitsAt === null || now - limitsAt > STALE_AFTER,
+    isStale: limitsAt === null || now - limitsAt > style.staleAfterMs,
   }
 }
 
@@ -63,9 +78,9 @@ export function formatCost(usd: number | null): string {
   return usd === null ? '$--' : `$${usd.toFixed(2)}`
 }
 
-export function textLine(snapshot: Snapshot, tokens: Tokens, now: number): string {
+export function textLine(snapshot: Snapshot, tokens: Tokens, now: number, style: Style): string {
   const windows = ['five_hour', 'seven_day'].map(kind => {
-    const w = windowOf(kind, snapshot, now)
+    const w = windowOf(kind, snapshot, now, style)
 
     return `${w.label} ${w.isStale ? '~' : ''}${w.percent ?? '--'}% left (${w.left})`
   })
@@ -86,7 +101,43 @@ const HEIGHT = 32
 const PILL = 30
 const TOP = (HEIGHT - PILL) / 2
 const MID = HEIGHT / 2
-const INK = '#1f2328'
+
+type Palette = {
+  ink: string
+  warn: string
+  danger: string
+  // Per pill, in the order drawn: its background and its icon and bar color.
+  pills: readonly { background: string; accent: string }[]
+}
+
+const PALETTES: Record<Style['theme'], Palette> = {
+  light: {
+    ink: '#1f2328',
+    warn: '#c77d1a',
+    danger: '#c0392b',
+    pills: [
+      { background: '#cfe3d8', accent: '#3f8f6b' },
+      { background: '#dad5f0', accent: '#6b55c9' },
+      { background: '#f1d6d0', accent: '#c0503c' },
+      { background: '#d6e7d6', accent: '#3f8f5a' },
+      { background: '#d4daf3', accent: '#4a5fd0' },
+      { background: '#efe4c4', accent: '#a8811c' },
+    ],
+  },
+  dark: {
+    ink: '#e6e8eb',
+    warn: '#e0a040',
+    danger: '#f0705f',
+    pills: [
+      { background: '#1f3a2e', accent: '#6fcf9f' },
+      { background: '#2e2850', accent: '#a594f0' },
+      { background: '#4a2620', accent: '#ef8f7c' },
+      { background: '#22382a', accent: '#7fcf95' },
+      { background: '#232c52', accent: '#8a9cf5' },
+      { background: '#40361a', accent: '#e0b84a' },
+    ],
+  },
+}
 
 const ICONS = {
   gauge: '<path d="M2.5 12a5.5 5.5 0 1 1 11 0"/><path d="M8 12l3-4"/>',
@@ -116,38 +167,41 @@ function widthOf(part: Part): number {
   return 'bar' in part ? 84 : 1
 }
 
-function drawPart(part: Part, x: number): string {
+function drawPart(part: Part, x: number, style: Style): string {
+  const { ink, warn, danger } = PALETTES[style.theme]
+
   if ('icon' in part) {
     return `<g transform="translate(${x} ${MID - 8})" fill="none" stroke="${part.color}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${ICONS[part.icon]}</g>`
   }
 
   if ('text' in part) {
-    return `<text x="${x}" y="${MID + 5}" fill="${INK}" font-weight="${part.isBold ? 700 : 400}"${part.isFaded ? ' opacity="0.4"' : ''}>${part.text}</text>`
+    return `<text x="${x}" y="${MID + 5}" fill="${ink}" font-weight="${part.isBold ? 700 : 400}"${part.isFaded ? ' opacity="0.4"' : ''}>${part.text}</text>`
   }
 
   if ('rule' in part) {
-    return `<rect x="${x}" y="${MID - 9}" width="1" height="18" fill="${INK}" opacity="0.25"/>`
+    return `<rect x="${x}" y="${MID - 9}" width="1" height="18" fill="${ink}" opacity="0.25"/>`
   }
 
   const { percent, timeLeft, isStale } = part.bar
   const fill = Math.round((Math.min(100, percent ?? 0) / 100) * 84)
-  const color = (percent ?? 100) <= 10 ? '#c0392b' : (percent ?? 100) <= 30 ? '#c77d1a' : part.color
+  const left = percent ?? 100
+  const color = left <= style.dangerBelow ? danger : left <= style.warnBelow ? warn : part.color
   const mark =
     timeLeft === null
       ? ''
-      : `<rect x="${x + Math.round(timeLeft * 82)}" y="${MID - 8}" width="2.5" height="16" rx="1" fill="${INK}"/>`
+      : `<rect x="${x + Math.round(timeLeft * 82)}" y="${MID - 8}" width="2.5" height="16" rx="1" fill="${ink}"/>`
 
   return (
-    `<rect x="${x}" y="${MID - 4}" width="84" height="8" rx="4" fill="${INK}" opacity="0.14"/>` +
+    `<rect x="${x}" y="${MID - 4}" width="84" height="8" rx="4" fill="${ink}" opacity="0.14"/>` +
     `<rect x="${x}" y="${MID - 4}" width="${fill}" height="8" rx="4" fill="${color}"${isStale ? ' opacity="0.4"' : ''}/>` +
     mark
   )
 }
 
-function drawPill(parts: Part[], background: string, x: number): { svg: string; width: number } {
+function drawPill(parts: Part[], background: string, x: number, style: Style): { svg: string; width: number } {
   let cursor = x + 12
   const drawn = parts.map(part => {
-    const svg = drawPart(part, cursor)
+    const svg = drawPart(part, cursor, style)
     cursor += widthOf(part) + 8
 
     return svg
@@ -172,44 +226,22 @@ function windowParts(w: Window, icon: 'gauge' | 'calendar', color: string): Part
   ]
 }
 
-export function barSvg(snapshot: Snapshot, tokens: Tokens, now: number): string {
-  const pills: { parts: Part[]; background: string; gapAfter: number }[] = [
-    {
-      parts: windowParts(windowOf('five_hour', snapshot, now), 'gauge', '#3f8f6b'),
-      background: '#cfe3d8',
-      gapAfter: 10,
-    },
-    {
-      parts: windowParts(windowOf('seven_day', snapshot, now), 'calendar', '#6b55c9'),
-      background: '#dad5f0',
-      gapAfter: 30,
-    },
-    {
-      parts: [{ icon: 'up', color: '#c0503c' }, { text: formatTokens(tokens.input), isBold: true }],
-      background: '#f1d6d0',
-      gapAfter: 10,
-    },
-    {
-      parts: [{ icon: 'down', color: '#3f8f5a' }, { text: formatTokens(tokens.output), isBold: true }],
-      background: '#d6e7d6',
-      gapAfter: 10,
-    },
-    {
-      parts: [{ icon: 'layers', color: '#4a5fd0' }, { text: formatTokens(tokens.cache), isBold: true }],
-      background: '#d4daf3',
-      gapAfter: 30,
-    },
-    {
-      parts: [{ icon: 'coin', color: '#a8811c' }, { text: formatCost(snapshot.costUsd), isBold: true }],
-      background: '#efe4c4',
-      gapAfter: 0,
-    },
+export function barSvg(snapshot: Snapshot, tokens: Tokens, now: number, style: Style): string {
+  const contents: { parts: (accent: string) => Part[]; gapAfter: number }[] = [
+    { parts: accent => windowParts(windowOf('five_hour', snapshot, now, style), 'gauge', accent), gapAfter: 10 },
+    { parts: accent => windowParts(windowOf('seven_day', snapshot, now, style), 'calendar', accent), gapAfter: 30 },
+    { parts: accent => [{ icon: 'up', color: accent }, { text: formatTokens(tokens.input), isBold: true }], gapAfter: 10 },
+    { parts: accent => [{ icon: 'down', color: accent }, { text: formatTokens(tokens.output), isBold: true }], gapAfter: 10 },
+    { parts: accent => [{ icon: 'layers', color: accent }, { text: formatTokens(tokens.cache), isBold: true }], gapAfter: 30 },
+    { parts: accent => [{ icon: 'coin', color: accent }, { text: formatCost(snapshot.costUsd), isBold: true }], gapAfter: 0 },
   ]
+  const { pills: colors } = PALETTES[style.theme]
 
   let x = 0
-  const drawn = pills.map(pill => {
-    const { svg, width } = drawPill(pill.parts, pill.background, x)
-    x += width + pill.gapAfter
+  const drawn = contents.map((content, index) => {
+    const { background, accent } = colors[index] ?? { background: 'none', accent: 'currentColor' }
+    const { svg, width } = drawPill(content.parts(accent), background, x, style)
+    x += width + content.gapAfter
 
     return svg
   })

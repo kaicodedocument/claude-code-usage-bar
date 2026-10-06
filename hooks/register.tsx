@@ -1,8 +1,9 @@
 import { atom, read, update } from 'claude-code'
-import type { EngineInterface, Register, SessionRateLimit } from 'claude-code'
+import type { EngineInterface, PluginOptions, Register, SessionRateLimit } from 'claude-code'
 
 import type { Limit } from '../types'
-import { barSvg, textLine } from './bar'
+import { DEFAULT_STYLE, barSvg, textLine } from './bar'
+import type { Style } from './bar'
 
 const snapshot = atom({ plugin: 'usage-bar', key: 'snapshot' } as const, {
   limits: [],
@@ -67,7 +68,24 @@ async function adopt($: EngineInterface): Promise<void> {
   )
 }
 
-export const register: Register = on => {
+function numberOf(value: unknown, fallback: number, min: number, max: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback
+}
+
+function styleOf(options: PluginOptions): Style {
+  return {
+    theme: options.theme === 'dark' ? 'dark' : 'light',
+    staleAfterMs: numberOf(options.staleMinutes, DEFAULT_STYLE.staleAfterMs / 60_000, 1, 1440) * 60_000,
+    warnBelow: numberOf(options.warnBelow, DEFAULT_STYLE.warnBelow, 0, 100),
+    dangerBelow: numberOf(options.dangerBelow, DEFAULT_STYLE.dangerBelow, 0, 100),
+  }
+}
+
+export const register: Register = (on, options) => {
+  const style = styleOf(options)
+  // Off, the up arrow counts uncached input alone and cache writes join the reads.
+  const countsCacheWrites = options.countCacheWrites !== false
+
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'usage-bar',
@@ -120,9 +138,10 @@ export const register: Register = on => {
 
     if (usage !== undefined) {
       await update($, tokens, sum => ({
-        input: sum.input + usage.input_tokens + usage.cache_creation_input_tokens,
+        input: sum.input + usage.input_tokens + (countsCacheWrites ? usage.cache_creation_input_tokens : 0),
         output: sum.output + usage.output_tokens,
-        cache: sum.cache + usage.cache_read_input_tokens,
+        cache:
+          sum.cache + usage.cache_read_input_tokens + (countsCacheWrites ? 0 : usage.cache_creation_input_tokens),
       }))
     }
 
@@ -140,7 +159,7 @@ export const register: Register = on => {
     const now = await $.clock.now()
     const shown = await read($, snapshot)
     const sum = await read($, tokens)
-    const line = textLine(shown, sum, now)
+    const line = textLine(shown, sum, now, style)
     const hide = (
       <Button
         key="hide"
@@ -160,7 +179,7 @@ export const register: Register = on => {
 
       return (
         <Box alignItems="center" gap={1}>
-          <Svg source={barSvg(shown, sum, now)} alt={line} />
+          <Svg source={barSvg(shown, sum, now, style)} alt={line} />
           {hide}
         </Box>
       )

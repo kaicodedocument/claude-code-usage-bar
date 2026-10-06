@@ -112,3 +112,44 @@ test('an idle session shows the reading another session stored, and fades an old
   expect((await ui.find({ type: 'Text' }))?.text).toContain('5h ~50% left')
   await ui.unmount()
 })
+
+test('options set the theme, the cache-write split and the fade time', { options: { theme: 'dark', countCacheWrites: false, staleMinutes: 1 } }, async ($, on) => {
+  const clock = mock.clock(on, { now: NOW })
+  mock.store(on)
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+  on('turn.complete', (_, e) => ({ text: e.answer }))
+
+  await $.session.measure({
+    context: { window: 200_000 },
+    rateLimits: [{ kind: 'five_hour', percentUsed: 20, resetsAt: '2026-10-06T14:40:00Z' }],
+    changed: ['rateLimits'],
+  })
+  await $.turn.complete({
+    answer: 'done',
+    durationMs: 1000,
+    isAborted: false,
+    turnId: 't1',
+    reason: 'answer',
+    usage: {
+      model: 'claude-opus-5-5',
+      input_tokens: 600,
+      cache_creation_input_tokens: 15_000,
+      output_tokens: 3000,
+      cache_read_input_tokens: 1000,
+    },
+  })
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  const svg = await ui.find({ type: 'Svg' })
+  expect(svg?.props.alt).toContain('5h 80% left (2h 40m) | 7d --% left (--) | in 600 | out 3.0k | cache 16.0k')
+  expect(String(svg?.props.source)).toContain('#1f3a2e')
+  expect(String(svg?.props.source)).not.toContain('#cfe3d8')
+
+  await ui.unmount()
+
+  // No timer runs in this test, so a fresh mount stands for the next redraw.
+  await clock.advance(2 * 60_000)
+  const later = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  expect((await later.find({ type: 'Svg' }))?.props.alt).toContain('5h ~80% left')
+  await later.unmount()
+})
