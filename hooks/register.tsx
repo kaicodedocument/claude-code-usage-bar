@@ -40,24 +40,37 @@ function sharedOf(stored: unknown): Shared | null {
   const { limits, at } = stored as { limits?: unknown; at?: unknown }
   const isValid =
     typeof at === 'number' &&
+    Number.isFinite(at) &&
     Array.isArray(limits) &&
     limits.every(
       (one: unknown) =>
         typeof one === 'object' &&
         one !== null &&
         typeof (one as Limit).kind === 'string' &&
-        typeof (one as Limit).percentUsed === 'number' &&
+        Number.isFinite((one as Limit).percentUsed) &&
         (typeof (one as Limit).resetsAt === 'string' || (one as Limit).resetsAt === null),
     )
 
   return isValid ? { limits: limits as Limit[], at: at as number } : null
 }
 
+// The bar only observes the session: nothing it does may fail an event of
+// the session's, so each piece of its own work is tried on its own.
+async function attempt(work: () => Promise<unknown>): Promise<void> {
+  try {
+    await work()
+  } catch {
+    // The bar keeps what it last drew.
+  }
+}
+
 // Takes the reading another session stored when it is newer than this one's.
 async function adopt($: EngineInterface): Promise<void> {
   const shared = sharedOf(await $.store.get(SHARED))
+  const now = await $.clock.now()
 
-  if (shared === null || shared.limits.length === 0) {
+  // A reading stamped ahead of the clock would outrank every real one.
+  if (shared === null || shared.limits.length === 0 || shared.at > now + 60_000) {
     return
   }
 
@@ -88,24 +101,28 @@ export const register: Register = (on, options) => {
   const countsCacheWrites = options.countCacheWrites !== false
 
   on('session.start', async ($, e, next) => {
-    await $.command.register({
-      name: 'usage-bar',
-      description: 'Show or hide the usage bar above the prompt',
-    })
-    // How old this reading is cannot be known here, so it carries no time and
-    // any stored one replaces it.
-    const usage = await $.session.usage()
-    await update($, snapshot, held => ({
-      limits: held.limitsAt === null ? limitsOf(usage.rateLimits) : held.limits,
-      limitsAt: held.limitsAt,
-      costUsd: usage.cost?.usd ?? held.costUsd,
-    }))
-    await adopt($)
     // The countdowns move with the clock, and another session's reading
     // arrives through the store: neither raises an event here.
     $.clock.every(60_000, () => {
-      void adopt($).finally(() => $.ui.invalidate('ui.render'))
+      void attempt(() => adopt($)).then(() => $.ui.invalidate('ui.render'))
     })
+    await attempt(() =>
+      $.command.register({
+        name: 'usage-bar',
+        description: 'Show or hide the usage bar above the prompt',
+      }),
+    )
+    // How old this reading is cannot be known here, so it carries no time and
+    // any stored one replaces it.
+    await attempt(async () => {
+      const usage = await $.session.usage()
+      await update($, snapshot, held => ({
+        limits: held.limitsAt === null ? limitsOf(usage.rateLimits) : held.limits,
+        limitsAt: held.limitsAt,
+        costUsd: usage.cost?.usd ?? held.costUsd,
+      }))
+    })
+    await attempt(() => adopt($))
 
     return next(e)
   })
@@ -119,17 +136,19 @@ export const register: Register = (on, options) => {
 
   on('session.measure', async ($, e, next) => {
     const limits = limitsOf(e.rateLimits)
-    const at = await $.clock.now()
-    await update($, snapshot, held => ({
-      limits: limits.length > 0 ? limits : held.limits,
-      limitsAt: limits.length > 0 ? at : held.limitsAt,
-      costUsd: e.cost?.usd ?? held.costUsd,
-    }))
+    await attempt(async () => {
+      const at = await $.clock.now()
+      await update($, snapshot, held => ({
+        limits: limits.length > 0 ? limits : held.limits,
+        limitsAt: limits.length > 0 ? at : held.limitsAt,
+        costUsd: e.cost?.usd ?? held.costUsd,
+      }))
 
-    if (limits.length > 0) {
-      const shared: Shared = { limits, at }
-      await $.store.set(SHARED, shared)
-    }
+      if (limits.length > 0) {
+        const shared: Shared = { limits, at }
+        await $.store.set(SHARED, shared)
+      }
+    })
 
     return next(e)
   })
@@ -138,12 +157,14 @@ export const register: Register = (on, options) => {
     const { usage } = e
 
     if (usage !== undefined) {
-      await update($, tokens, sum => ({
-        input: sum.input + usage.input_tokens + (countsCacheWrites ? usage.cache_creation_input_tokens : 0),
-        output: sum.output + usage.output_tokens,
-        cache:
-          sum.cache + usage.cache_read_input_tokens + (countsCacheWrites ? 0 : usage.cache_creation_input_tokens),
-      }))
+      await attempt(() =>
+        update($, tokens, sum => ({
+          input: sum.input + usage.input_tokens + (countsCacheWrites ? usage.cache_creation_input_tokens : 0),
+          output: sum.output + usage.output_tokens,
+          cache:
+            sum.cache + usage.cache_read_input_tokens + (countsCacheWrites ? 0 : usage.cache_creation_input_tokens),
+        })),
+      )
     }
 
     return next(e)

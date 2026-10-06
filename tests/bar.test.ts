@@ -171,3 +171,74 @@ test('showUpdated off leaves the reading age out', { options: { showUpdated: fal
   expect((await ui.find({ type: 'Text' }))?.text).not.toContain('updated')
   await ui.unmount()
 })
+
+test('a store and usage call that fail at start leave the bar working once they recover', async ($, on) => {
+  const clock = mock.clock(on, { now: NOW })
+  let isDown = true
+  on('store.get', () => {
+    if (isDown) {
+      throw new Error('store is down')
+    }
+
+    return {
+      value: { limits: [{ kind: 'five_hour', percentUsed: 35, resetsAt: '2026-10-06T14:40:00Z' }], at: NOW + 30_000 },
+    }
+  })
+  on('store.set', () => {
+    throw new Error('store is down')
+  })
+  on('session.usage', () => {
+    throw new Error('no usage')
+  })
+  on('command.register', () => ({ value: { command: 'usage-bar' } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+
+  expect(await $.session.start({ cwd: '/tmp', surface: 'terminal', isInteractive: true })).toEqual({ cwd: '/tmp' })
+  expect(
+    await $.session.measure({ context: { window: 200_000 }, rateLimits: [], cost: { usd: 1 }, changed: ['cost'] }),
+  ).toEqual({ changed: ['cost'] })
+
+  // The minute timer must have been started despite the failures above.
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text' }))?.text).toContain('5h --% left (--)')
+  isDown = false
+  await clock.advance(60_000)
+  expect((await ui.find({ type: 'Text' }))?.text).toContain('5h 65% left')
+  await ui.unmount()
+})
+
+test('a stored reading that is malformed or stamped in the future is ignored', async ($, on) => {
+  mock.clock(on, { now: NOW })
+  const limits = [{ kind: 'five_hour', percentUsed: 35, resetsAt: '2026-10-06T14:40:00Z' }]
+  let stored: unknown = { limits, at: NOW + 3_600_000 }
+  on('store.get', () => ({ value: stored }))
+  on('session.usage', () => ({ value: { startedAt: NOW, context: { window: 200_000 }, rateLimits: [] } }))
+  on('command.register', () => ({ value: { command: 'usage-bar' } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+
+  for (const bad of [stored, { limits, at: 'yesterday' }, { limits: [{ kind: 'five_hour' }], at: NOW }, 'nonsense']) {
+    stored = bad
+    await $.session.start({ cwd: '/tmp', surface: 'terminal', isInteractive: true })
+    const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    expect((await ui.find({ type: 'Text' }))?.text).toContain('5h --% left (--)')
+    await ui.unmount()
+  }
+})
+
+test('a reading from a window that has since reset is drawn faded', async ($, on) => {
+  const clock = mock.clock(on, { now: NOW })
+  mock.store(on)
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+
+  await $.session.measure({
+    context: { window: 200_000 },
+    rateLimits: [{ kind: 'five_hour', percentUsed: 90, resetsAt: '2026-10-06T12:03:00Z' }],
+    changed: ['rateLimits'],
+  })
+  await clock.advance(5 * 60_000)
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text' }))?.text).toContain('5h ~10% left (0m)')
+  await ui.unmount()
+})

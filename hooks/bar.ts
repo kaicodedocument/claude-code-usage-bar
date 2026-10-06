@@ -41,7 +41,8 @@ export function formatTokens(n: number): string {
     return String(n)
   }
 
-  return n < 1_000_000 ? `${(n / 1000).toFixed(1)}k` : `${(n / 1_000_000).toFixed(2)}M`
+  // 999,950 and up would round to "1000.0k".
+  return n < 999_950 ? `${(n / 1000).toFixed(1)}k` : `${(n / 1_000_000).toFixed(2)}M`
 }
 
 export function formatLeft(ms: number): string {
@@ -73,7 +74,8 @@ export function windowOf(kind: string, snapshot: Snapshot, now: number, style: S
     percent: Math.max(0, 100 - Math.round(limit.percentUsed)),
     timeLeft: hasReset ? Math.min(1, Math.max(0, resetsIn / ms)) : null,
     left: hasReset ? formatLeft(resetsIn) : '--',
-    isStale: limitsAt === null || now - limitsAt > style.staleAfterMs,
+    // Past its reset the percentage describes a window that is over.
+    isStale: limitsAt === null || now - limitsAt > style.staleAfterMs || (hasReset && resetsIn <= 0),
   }
 }
 

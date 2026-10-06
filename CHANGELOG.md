@@ -2,6 +2,16 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.5 - 2026-10-06
+
+Fixes found in a review of the code; nothing changes in normal use.
+
+- A failure while the session starts (reading usage, reading the shared store, registering the command) no longer stops the minute timer, so the countdowns and shared readings keep updating.
+- A failure in the bar's own bookkeeping can no longer fail the session event it was observing.
+- A shared reading that is malformed, or stamped ahead of the clock, is ignored instead of being shown.
+- A percentage from a window that has since reset is drawn faded.
+- Token counts just under a million no longer show as `1000.0k`.
+
 ## 0.3.4 - 2026-10-06
 
 The mod's behavior is unchanged.
