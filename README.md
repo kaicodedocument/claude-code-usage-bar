@@ -1,10 +1,12 @@
 # claude-code-usage-bar
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/kaicodedocument/claude-code-usage-bar)](https://github.com/kaicodedocument/claude-code-usage-bar/releases) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 English | [中文](README.zh.md)
 
-`usage-bar` is a Claude Code mod that draws a usage bar above the prompt: what is left of the 5-hour and 7-day rate-limit windows, this session's tokens, and its cost.
+`usage-bar` shows your Claude usage in the **Claude desktop app**: a bar above the prompt of the Code tab with what is left of the 5-hour and 7-day rate-limit windows, this session's tokens, and its cost.
+
+It is a Claude Code mod, not a status-line script, which is why it can draw there. See [How it differs from status-line tools](#how-it-differs-from-status-line-tools).
 
 ![The usage bar in the app's light theme](docs/screenshot-light.png)
 
@@ -13,6 +15,20 @@ English | [中文](README.zh.md)
 Both show the default palette. A darker one is chosen with the [`theme` option](#configuration).
 
 > **Early access.** Claude Code's mod (function hooks) API may change between releases, and a Claude Code update can break this mod. See [Requirements](#requirements) for what it has been used on.
+
+## How it differs from status-line tools
+
+Claude Code's status line is a row in the terminal, filled by a shell script. On the desktop app's Code tab that row was not drawn on the setup this was built on (macOS, Claude Code 2.1.288, with a status-line tool configured), so there was nowhere for such a tool to show its numbers.
+
+A mod draws through a different route, the band above the prompt, which the desktop app does draw. That is the whole reason this exists.
+
+| | `usage-bar` | Status-line tools |
+| --- | --- | --- |
+| Where it shows | The band above the prompt: desktop app and terminal | The terminal's status line |
+| How it gets its numbers | Claude Code hands them to the mod; no script runs | A shell script reads session data on stdin |
+| What it shows | Rate-limit windows, session tokens, session cost | Often much more: context, git, model, tools, history |
+
+If you work in the terminal, a status-line tool such as [claude-hud](https://github.com/jarrodwatts/claude-hud), [ccstatusline](https://github.com/sirmalloc/ccstatusline) or [ccusage](https://github.com/ryoppippi/ccusage) shows more than this does. If you work in the desktop app, this is for you.
 
 ## Requirements
 

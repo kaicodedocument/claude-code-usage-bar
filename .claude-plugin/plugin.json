@@ -1,7 +1,7 @@
 {
   "name": "usage-bar",
-  "version": "0.3.8",
-  "description": "Shows what is left of your 5-hour and 7-day rate-limit windows, plus this session's tokens and cost, above the Claude Code prompt.",
+  "version": "0.3.9",
+  "description": "Shows what is left of your 5-hour and 7-day rate-limit windows, plus this session's tokens and cost, above the prompt. Works in the Claude desktop app's Code tab.",
   "types": "./types/index.d.ts",
   "author": {
     "name": "chenkai"

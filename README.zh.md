@@ -1,10 +1,12 @@
 # claude-code-usage-bar
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/kaicodedocument/claude-code-usage-bar)](https://github.com/kaicodedocument/claude-code-usage-bar/releases) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [English](README.md) | 中文
 
-`usage-bar` 是一个 Claude Code mod，在输入框上方显示用量条：5 小时和 7 天额度窗口的剩余量、本会话的 token 数和费用。
+`usage-bar` 让你在 **Claude 桌面版**里看到用量：在 Code 标签的输入框上方显示一条用量条，包含 5 小时和 7 天额度窗口的剩余量、本会话的 token 数和费用。
+
+它是一个 Claude Code mod，不是状态栏脚本，所以能画在那里。见[和状态栏工具的区别](#和状态栏工具的区别)。
 
 ![应用浅色主题下的用量条](docs/screenshot-light.png)
 
@@ -13,6 +15,20 @@
 两张都是默认配色。更暗的一套配色通过 [`theme` 配置项](#配置)选择。
 
 > **早期接口。** Claude Code 的 mod（function hooks）接口可能随版本变化，Claude Code 升级后本 mod 可能失效。实际使用过的环境见[环境要求](#环境要求)。
+
+## 和状态栏工具的区别
+
+Claude Code 的状态栏是终端里的一行，由一段 shell 脚本填充内容。在本 mod 开发所用的环境里（macOS、Claude Code 2.1.288、已配置状态栏工具），桌面版的 Code 标签没有画出这一行，所以这类工具的数字在那里无处显示。
+
+mod 走的是另一条路：输入框上方的区域，桌面版会绘制它。这就是本 mod 存在的全部理由。
+
+| | `usage-bar` | 状态栏工具 |
+| --- | --- | --- |
+| 显示位置 | 输入框上方的区域：桌面版和终端 | 终端的状态栏 |
+| 数据来源 | Claude Code 把数据交给 mod，不运行脚本 | shell 脚本从标准输入读取会话数据 |
+| 显示内容 | 额度窗口、会话 token、会话费用 | 通常多得多：上下文、git、模型、工具、历史 |
+
+如果你在终端里工作，[claude-hud](https://github.com/jarrodwatts/claude-hud)、[ccstatusline](https://github.com/sirmalloc/ccstatusline)、[ccusage](https://github.com/ryoppippi/ccusage) 这类状态栏工具显示的内容比本 mod 多。如果你用桌面版，本 mod 是为你做的。
 
 ## 环境要求
 

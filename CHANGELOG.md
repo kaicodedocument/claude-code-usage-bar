@@ -2,6 +2,13 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.9 - unreleased
+
+Documentation only; the mod's behavior is unchanged.
+
+- The README now opens by saying what this is for: usage in the desktop app's Code tab, where a terminal status line is not drawn. Added a section comparing it with status-line tools.
+- Added a release badge.
+
 ## 0.3.8 - 2026-10-06
 
 The mod's behavior is unchanged.
