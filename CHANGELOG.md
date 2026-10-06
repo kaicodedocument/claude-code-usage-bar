@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.8 - 2026-10-06
+
+The mod's behavior is unchanged.
+
+- New icon: a clock whose rim shows the allowance that is left.
+
 ## 0.3.7 - 2026-10-06
 
 The mod's behavior is unchanged.
