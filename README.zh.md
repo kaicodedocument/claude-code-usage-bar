@@ -8,6 +8,10 @@
 
 它是一个 Claude Code mod，不是状态栏脚本，所以能画在那里。见[和状态栏工具的区别](#和状态栏工具的区别)。
 
+![用量条在一次回复后更新、被关闭按钮隐藏、再用 /usage-bar 恢复](docs/demo.gif)
+
+*动画示意，不是录屏：在一张真实截图上，用 mod 自己的绘图代码重画用量条。*
+
 ![应用浅色主题下的用量条](docs/screenshot-light.png)
 
 ![应用深色主题下的用量条，默认配色](docs/screenshot-dark.png)

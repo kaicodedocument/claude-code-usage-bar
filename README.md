@@ -8,6 +8,10 @@ English | [中文](README.zh.md)
 
 It is a Claude Code mod, not a status-line script, which is why it can draw there. See [How it differs from status-line tools](#how-it-differs-from-status-line-tools).
 
+![The usage bar updating after a reply, being hidden with the close button, and brought back with /usage-bar](docs/demo.gif)
+
+*Animated illustration, not a screen recording: a real screenshot with the bar redrawn by the mod's own code.*
+
 ![The usage bar in the app's light theme](docs/screenshot-light.png)
 
 ![The usage bar in the app's dark theme, with the default palette](docs/screenshot-dark.png)
