@@ -28,6 +28,19 @@ The dark palette is chosen with the [`theme` option](#configuration).
 
 The bar turns orange at 30% left and red at 10% left. A reading older than 10 minutes is drawn faded. All three are [configurable](#configuration).
 
+## When it updates
+
+There is no polling of Anthropic's servers. Each figure updates on its own trigger:
+
+| Figure | Updates |
+| --- | --- |
+| `5h` / `7d` percentage and bar | When a model response comes back in this session, or within about a minute of one coming back in any other local session |
+| Reset countdown and the vertical mark | Every 60 seconds, from the clock |
+| Token counts | At the end of each turn in this session |
+| Cost | At the end of each turn in this session |
+
+So an idle session's percentages stay where they were until some local session gets a response; after 10 minutes without one they are drawn faded. The countdown keeps moving regardless.
+
 ## Requirements
 
 - Claude Code with mods (function hooks) available. Written against 2.1.288.
