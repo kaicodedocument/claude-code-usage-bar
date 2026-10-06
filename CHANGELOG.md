@@ -7,6 +7,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 The mod's behavior is unchanged.
 
 - New icon: a clock whose rim shows the allowance that is left.
+- Clearer description and added keywords in `plugin.json`, for the directory listing.
 
 ## 0.3.7 - 2026-10-06
 

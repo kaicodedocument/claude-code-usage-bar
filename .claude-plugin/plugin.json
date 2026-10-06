@@ -1,7 +1,7 @@
 {
   "name": "usage-bar",
   "version": "0.3.8",
-  "description": "A band above the prompt: 5h and 7d rate-limit windows, session tokens and cost",
+  "description": "Shows what is left of your 5-hour and 7-day rate-limit windows, plus this session's tokens and cost, above the Claude Code prompt.",
   "types": "./types/index.d.ts",
   "author": {
     "name": "chenkai"
@@ -9,6 +9,15 @@
   "license": "MIT",
   "homepage": "https://github.com/kaicodedocument/claude-code-usage-bar",
   "repository": "https://github.com/kaicodedocument/claude-code-usage-bar",
+  "keywords": [
+    "usage",
+    "rate-limit",
+    "quota",
+    "tokens",
+    "cost",
+    "statusline",
+    "mod"
+  ],
   "userConfig": {
     "theme": {
       "type": "string",
