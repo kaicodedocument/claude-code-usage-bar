@@ -1,6 +1,6 @@
 {
   "name": "usage-bar",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "A band above the prompt: 5h and 7d rate-limit windows, session tokens and cost",
   "types": "./types/index.d.ts",
   "author": {
@@ -13,12 +13,8 @@
     "theme": {
       "type": "string",
       "title": "Theme",
-      "description": "Pill colors: light or dark. The mod cannot read the app theme, so pick the one that matches.",
-      "default": "light",
-      "options": [
-        "light",
-        "dark"
-      ]
+      "description": "Pill colors: \"light\" or \"dark\". Any other value is read as \"light\". The mod cannot read the app theme, so pick the one that matches.",
+      "default": "light"
     },
     "staleMinutes": {
       "type": "number",

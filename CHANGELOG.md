@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.7 - 2026-10-06
+
+The mod's behavior is unchanged.
+
+- `theme` is now a plain text option. The plugin directory does not yet accept an option that lists its allowed values; `"dark"` still selects the dark palette and anything else the light one.
+
 ## 0.3.6 - 2026-10-06
 
 Documentation only; the mod's behavior is unchanged.
