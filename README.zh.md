@@ -6,7 +6,11 @@
 
 一个 Claude Code mod，在输入框上方显示用量条：5 小时和 7 天额度窗口的剩余量、本会话的 token 数和费用。
 
-![输入框上方的用量条](docs/screenshot.png)
+![浅色主题下的用量条](docs/screenshot-light.png)
+
+![深色主题下的用量条，使用深色配色](docs/screenshot-dark.png)
+
+深色配色通过 [`theme` 配置项](#配置)选择。
 
 > **早期接口。** Claude Code 的 mod（function hooks）接口可能随版本变化，Claude Code 升级后本 mod 可能失效。实际使用过的环境见[环境要求](#环境要求)。
 
@@ -33,7 +37,7 @@
 ## 安装
 
 ```bash
-git clone https://github.com/kaicodedocument/usage-bar ~/.claude/mods/usage-bar
+git clone https://github.com/kaicodedocument/claude-code-usage-bar ~/.claude/mods/usage-bar
 ```
 
 在 `~/.claude/settings.json` 的 `env` 里指向该目录，然后新开一个会话：

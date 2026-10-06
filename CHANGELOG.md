@@ -2,6 +2,13 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.2.1 - 2026-10-06
+
+Documentation only; the mod's behavior is unchanged.
+
+- Added a screenshot of the dark palette in the app's dark theme.
+- The repository is now `claude-code-usage-bar`. The mod's own name, its `/usage-bar` command and its `pluginConfigs` key stay `usage-bar`.
+
 ## 0.2.0 - 2026-10-06
 
 - Added options, set under `pluginConfigs` in `~/.claude/settings.json`: `theme`, `staleMinutes`, `warnBelow`, `dangerBelow` and `countCacheWrites`.

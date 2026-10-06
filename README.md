@@ -6,7 +6,11 @@ English | [中文](README.zh.md)
 
 A Claude Code mod that draws a usage bar above the prompt: what is left of the 5-hour and 7-day rate-limit windows, this session's tokens, and its cost.
 
-![usage-bar above the Claude Code prompt](docs/screenshot.png)
+![usage-bar in the light theme](docs/screenshot-light.png)
+
+![usage-bar in the dark theme, with the dark palette](docs/screenshot-dark.png)
+
+The dark palette is chosen with the [`theme` option](#configuration).
 
 > **Early access.** Claude Code's mod (function hooks) API may change between releases, and a Claude Code update can break this mod. See [Requirements](#requirements) for what it has been used on.
 
@@ -33,7 +37,7 @@ The bar turns orange at 30% left and red at 10% left. A reading older than 10 mi
 ## Install
 
 ```bash
-git clone https://github.com/kaicodedocument/usage-bar ~/.claude/mods/usage-bar
+git clone https://github.com/kaicodedocument/claude-code-usage-bar ~/.claude/mods/usage-bar
 ```
 
 Name the folder in the `env` block of `~/.claude/settings.json`, then start a new session:
