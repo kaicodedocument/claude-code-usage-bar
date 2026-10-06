@@ -2,6 +2,14 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.4 - 2026-10-06
+
+The mod's behavior is unchanged.
+
+- The repository is now a plugin marketplace, so the mod installs with `claude plugin marketplace add` and `claude plugin install`.
+- Requirements now say that the terminal CLI loads mods only with `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`.
+- Update, uninstall and configuration are documented for both ways of installing.
+
 ## 0.3.3 - 2026-10-06
 
 Documentation only; the mod's behavior is unchanged.

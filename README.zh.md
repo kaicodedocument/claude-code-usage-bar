@@ -17,10 +17,24 @@
 ## 环境要求
 
 - 支持 mod（function hooks）的 Claude Code。本 mod 基于 2.1.288 编写。
+- mod 是早期功能，在你的版本里可能默认关闭。macOS 桌面端（2.1.288）可以直接加载；终端 CLI（2.1.285）需要设置 `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1` 才会加载，写在 shell 环境里或 `~/.claude/settings.json` 的 `env` 里都可以。
 - 只在 macOS 桌面端使用过。终端里显示为一行文字。Windows、Linux、VS Code 扩展和手机端未测试。
 - `5h` 和 `7d` 两项需要 Claude 订阅账号。非订阅账号下 Claude Code 不提供额度窗口，这两项显示 `--`。
 
 ## 安装
+
+两种方式选一种，不要都用：装两遍会加载两次。
+
+### 通过插件市场
+
+```bash
+claude plugin marketplace add kaicodedocument/claude-code-usage-bar
+claude plugin install usage-bar@claude-code-usage-bar
+```
+
+然后新开一个会话。这种方式只在终端 CLI 里试过。
+
+### 手动安装
 
 ```bash
 git clone https://github.com/kaicodedocument/claude-code-usage-bar ~/.claude/mods/usage-bar
@@ -46,13 +60,12 @@ claude --plugin-dir ~/.claude/mods/usage-bar
 
 ## 更新与卸载
 
-更新：拉取最新代码后新开一个会话。
+| | 插件市场安装 | 手动安装 |
+| --- | --- | --- |
+| 更新 | 先 `claude plugin marketplace update claude-code-usage-bar`，再 `claude plugin update usage-bar@claude-code-usage-bar` | `git -C ~/.claude/mods/usage-bar pull` |
+| 卸载 | `claude plugin uninstall usage-bar@claude-code-usage-bar` | 从 `~/.claude/settings.json` 里删掉 `CLAUDE_CODE_PLUGIN_DIRS`（或其中的这个目录），再删除该目录 |
 
-```bash
-git -C ~/.claude/mods/usage-bar pull
-```
-
-卸载：从 `~/.claude/settings.json` 里删掉 `CLAUDE_CODE_PLUGIN_DIRS`（或其中的这个目录）以及 `pluginConfigs["usage-bar"]`，再删除该目录。已经打开的会话在重启前仍会显示用量条。
+两种方式操作后都要新开会话；已经打开的会话保持原来加载的内容。配置项会留在 `pluginConfigs` 里，直到你手动删除。
 
 ## 显示内容
 
@@ -71,7 +84,7 @@ git -C ~/.claude/mods/usage-bar pull
 
 ## 配置
 
-配置项从 `~/.claude/settings.json` 的 `pluginConfigs` 读取，以 mod 名称为键。全部可选，修改后新开会话生效。
+配置项从 `~/.claude/settings.json` 的 `pluginConfigs` 读取。全部可选，修改后新开会话生效。键名取决于安装方式：手动安装是 `usage-bar`，插件市场安装是 `usage-bar@claude-code-usage-bar`。下面的例子按手动安装写。
 
 ```json
 {
@@ -144,7 +157,7 @@ git -C ~/.claude/mods/usage-bar pull
 
 ## 故障排查
 
-**用量条没有出现。** 会话在启动时读取配置，请新开一个会话；新会话里仍没有就重启应用。检查 `CLAUDE_CODE_PLUGIN_DIRS` 指向的是包含 `.claude-plugin/` 的那个目录。mod 加载失败时，`claude --debug` 的日志里会有一行以 `usage-bar:` 开头的记录。
+**用量条没有出现。** 会话在启动时读取配置，请新开一个会话；新会话里仍没有就重启应用。在终端里使用时，需要设置 `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`（见[环境要求](#环境要求)）。检查 `CLAUDE_CODE_PLUGIN_DIRS` 指向的是包含 `.claude-plugin/` 的那个目录。mod 加载失败时，`claude --debug` 的日志里会有一行以 `usage-bar:` 开头的记录。
 
 **全部显示 `--` 或 `0`。** 本会话还没有收到过模型响应，发一条消息即可。
 

@@ -17,10 +17,24 @@ Both show the default palette. A darker one is chosen with the [`theme` option](
 ## Requirements
 
 - Claude Code with mods (function hooks) available. Written against 2.1.288.
+- Mods are early access and may be switched off in your build. The macOS desktop app (2.1.288) loaded this one as is. The terminal CLI (2.1.285) loaded it only with `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`, set in the shell or in the `env` block of `~/.claude/settings.json`.
 - Used only on the macOS desktop app. In a terminal the bar is one line of text. Windows, Linux, the VS Code extension and the mobile app are untested.
 - A Claude subscription for the `5h` and `7d` windows. Without one Claude Code reports no rate-limit windows and both show `--`.
 
 ## Install
+
+Use one of the two ways, not both: installed twice, the mod loads twice.
+
+### From the plugin marketplace
+
+```bash
+claude plugin marketplace add kaicodedocument/claude-code-usage-bar
+claude plugin install usage-bar@claude-code-usage-bar
+```
+
+Start a new session. This route has been tried in the terminal CLI only.
+
+### By hand
 
 ```bash
 git clone https://github.com/kaicodedocument/claude-code-usage-bar ~/.claude/mods/usage-bar
@@ -46,13 +60,12 @@ claude --plugin-dir ~/.claude/mods/usage-bar
 
 ## Update and uninstall
 
-To update, pull and start a new session:
+| | Marketplace install | By hand |
+| --- | --- | --- |
+| Update | `claude plugin marketplace update claude-code-usage-bar`, then `claude plugin update usage-bar@claude-code-usage-bar` | `git -C ~/.claude/mods/usage-bar pull` |
+| Uninstall | `claude plugin uninstall usage-bar@claude-code-usage-bar` | Remove `CLAUDE_CODE_PLUGIN_DIRS` (or this folder from it) from `~/.claude/settings.json`, then delete the folder |
 
-```bash
-git -C ~/.claude/mods/usage-bar pull
-```
-
-To uninstall, remove `CLAUDE_CODE_PLUGIN_DIRS` (or this folder from it) and any `pluginConfigs["usage-bar"]` entry from `~/.claude/settings.json`, then delete the folder. Sessions already open keep the bar until they are restarted.
+Either way, start a new session afterwards; sessions already open keep what they loaded. Your options stay in `pluginConfigs` until you remove them.
 
 ## What it shows
 
@@ -71,7 +84,7 @@ The bar turns orange at 30% left and red at 10% left. A reading older than 10 mi
 
 ## Configuration
 
-Options are read from `pluginConfigs` in `~/.claude/settings.json`, keyed by the mod's name. All are optional; a new session picks up a change.
+Options are read from `pluginConfigs` in `~/.claude/settings.json`. All are optional; a new session picks up a change. The key depends on how you installed: `usage-bar` by hand, `usage-bar@claude-code-usage-bar` from the marketplace. The example is for an install by hand.
 
 ```json
 {
@@ -144,7 +157,7 @@ To refresh on demand, send any message in any local session.
 
 ## Troubleshooting
 
-**The bar does not appear.** Sessions read the setting when they start, so open a new session; restart the app if a new session still has none. Check that the path in `CLAUDE_CODE_PLUGIN_DIRS` is the folder holding `.claude-plugin/`. `claude --debug` logs a line starting `usage-bar:` when the mod fails to load.
+**The bar does not appear.** Sessions read the setting when they start, so open a new session; restart the app if a new session still has none. In the terminal, set `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1` (see [Requirements](#requirements)). Check that the path in `CLAUDE_CODE_PLUGIN_DIRS` is the folder holding `.claude-plugin/`. `claude --debug` logs a line starting `usage-bar:` when the mod fails to load.
 
 **Everything shows `--` or `0`.** No model response has come back yet in this session. Send a message.
 

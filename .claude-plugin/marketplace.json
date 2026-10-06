@@ -1,0 +1,18 @@
+{
+  "name": "claude-code-usage-bar",
+  "owner": {
+    "name": "chenkai"
+  },
+  "metadata": {
+    "description": "A usage bar above the Claude Code prompt: rate-limit allowance, session tokens and cost"
+  },
+  "plugins": [
+    {
+      "name": "usage-bar",
+      "source": "./",
+      "description": "Shows what is left of the 5-hour and 7-day rate-limit windows, this session's tokens and its cost, above the prompt",
+      "category": "monitoring",
+      "tags": ["usage", "rate-limit", "statusline", "mod"]
+    }
+  ]
+}
