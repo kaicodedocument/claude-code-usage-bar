@@ -78,6 +78,7 @@ function styleOf(options: PluginOptions): Style {
     staleAfterMs: numberOf(options.staleMinutes, DEFAULT_STYLE.staleAfterMs / 60_000, 1, 1440) * 60_000,
     warnBelow: numberOf(options.warnBelow, DEFAULT_STYLE.warnBelow, 0, 100),
     dangerBelow: numberOf(options.dangerBelow, DEFAULT_STYLE.dangerBelow, 0, 100),
+    showUpdated: options.showUpdated !== false,
   }
 }
 

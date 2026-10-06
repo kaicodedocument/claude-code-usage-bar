@@ -10,6 +10,8 @@ export type Style = {
   // At or below these percentages left, the bar is drawn orange, then red.
   warnBelow: number
   dangerBelow: number
+  // Whether the bar says how long ago the rate-limit reading was taken.
+  showUpdated: boolean
 }
 
 export const DEFAULT_STYLE: Style = {
@@ -17,6 +19,7 @@ export const DEFAULT_STYLE: Style = {
   staleAfterMs: 10 * 60_000,
   warnBelow: 30,
   dangerBelow: 10,
+  showUpdated: true,
 }
 const WINDOWS: Record<string, { label: string; ms: number }> = {
   five_hour: { label: '5h', ms: 5 * HOUR },
@@ -78,6 +81,18 @@ export function formatCost(usd: number | null): string {
   return usd === null ? '$--' : `$${usd.toFixed(2)}`
 }
 
+// How long ago the rate-limit reading was taken: `now` under a minute, `--`
+// when there is no reading or its time is unknown.
+export function formatAge(snapshot: Snapshot, now: number): string {
+  if (snapshot.limits.length === 0 || snapshot.limitsAt === null) {
+    return '--'
+  }
+
+  const age = now - snapshot.limitsAt
+
+  return age < 60_000 ? 'now' : formatLeft(age)
+}
+
 export function textLine(snapshot: Snapshot, tokens: Tokens, now: number, style: Style): string {
   const windows = ['five_hour', 'seven_day'].map(kind => {
     const w = windowOf(kind, snapshot, now, style)
@@ -85,8 +100,14 @@ export function textLine(snapshot: Snapshot, tokens: Tokens, now: number, style:
     return `${w.label} ${w.isStale ? '~' : ''}${w.percent ?? '--'}% left (${w.left})`
   })
 
+  const age = formatAge(snapshot, now)
+  const updated = style.showUpdated && snapshot.limits.length > 0
+    ? [`updated ${age === 'now' || age === '--' ? age : `${age} ago`}`]
+    : []
+
   return [
     ...windows,
+    ...updated,
     `in ${formatTokens(tokens.input)}`,
     `out ${formatTokens(tokens.output)}`,
     `cache ${formatTokens(tokens.cache)}`,
@@ -104,6 +125,8 @@ const MID = HEIGHT / 2
 
 type Palette = {
   ink: string
+  // The refresh mark and its age, drawn on the band itself and not on a pill.
+  muted: string
   warn: string
   danger: string
   // Per pill, in the order drawn: its background and its icon and bar color.
@@ -113,6 +136,7 @@ type Palette = {
 const PALETTES: Record<Style['theme'], Palette> = {
   light: {
     ink: '#1f2328',
+    muted: '#6b7076',
     warn: '#c77d1a',
     danger: '#c0392b',
     pills: [
@@ -126,6 +150,7 @@ const PALETTES: Record<Style['theme'], Palette> = {
   },
   dark: {
     ink: '#e6e8eb',
+    muted: '#9aa0a6',
     warn: '#e0a040',
     danger: '#f0705f',
     pills: [
@@ -146,12 +171,13 @@ const ICONS = {
   up: '<path d="M8 10V2.5M5 5.5l3-3 3 3M3 10v3.5h10V10"/>',
   down: '<path d="M8 2.5V10M5 7l3 3 3-3M3 10v3.5h10V10"/>',
   layers: '<path d="M8 2l6 3-6 3-6-3zM2 8l6 3 6-3M2 11l6 3 6-3"/>',
+  refresh: '<path d="M13 8a5 5 0 1 1-1.6-3.6M13 2.8v3.2H9.8"/>',
   coin: '<circle cx="8" cy="8" r="5.5"/><path d="M9.8 6.2c-.3-.6-1-.9-1.8-.9-1 0-1.8.5-1.8 1.3 0 1.9 3.7.8 3.7 2.8 0 .8-.8 1.3-1.9 1.3-.9 0-1.6-.4-1.9-1M8 4.2v7.6"/>',
 }
 
 type Part =
   | { icon: keyof typeof ICONS; color: string }
-  | { text: string; isBold?: boolean; isFaded?: boolean }
+  | { text: string; isBold?: boolean; isFaded?: boolean; color?: string }
   | { bar: Window; color: string }
   | { rule: true }
 
@@ -175,7 +201,7 @@ function drawPart(part: Part, x: number, style: Style): string {
   }
 
   if ('text' in part) {
-    return `<text x="${x}" y="${MID + 5}" fill="${ink}" font-weight="${part.isBold ? 700 : 400}"${part.isFaded ? ' opacity="0.4"' : ''}>${part.text}</text>`
+    return `<text x="${x}" y="${MID + 5}" fill="${part.color ?? ink}" font-weight="${part.isBold ? 700 : 400}"${part.isFaded ? ' opacity="0.4"' : ''}>${part.text}</text>`
   }
 
   if ('rule' in part) {
@@ -227,19 +253,36 @@ function windowParts(w: Window, icon: 'gauge' | 'calendar', color: string): Part
 }
 
 export function barSvg(snapshot: Snapshot, tokens: Tokens, now: number, style: Style): string {
-  const contents: { parts: (accent: string) => Part[]; gapAfter: number }[] = [
-    { parts: accent => windowParts(windowOf('five_hour', snapshot, now, style), 'gauge', accent), gapAfter: 10 },
-    { parts: accent => windowParts(windowOf('seven_day', snapshot, now, style), 'calendar', accent), gapAfter: 30 },
-    { parts: accent => [{ icon: 'up', color: accent }, { text: formatTokens(tokens.input), isBold: true }], gapAfter: 10 },
-    { parts: accent => [{ icon: 'down', color: accent }, { text: formatTokens(tokens.output), isBold: true }], gapAfter: 10 },
-    { parts: accent => [{ icon: 'layers', color: accent }, { text: formatTokens(tokens.cache), isBold: true }], gapAfter: 30 },
-    { parts: accent => [{ icon: 'coin', color: accent }, { text: formatCost(snapshot.costUsd), isBold: true }], gapAfter: 0 },
+  const { pills: colors, muted } = PALETTES[style.theme]
+  // `pill` picks the palette entry; without one the parts sit on the band itself.
+  const contents: { pill?: number; parts: (accent: string) => Part[]; gapAfter: number }[] = [
+    { pill: 0, parts: accent => windowParts(windowOf('five_hour', snapshot, now, style), 'gauge', accent), gapAfter: 10 },
+    { pill: 1, parts: accent => windowParts(windowOf('seven_day', snapshot, now, style), 'calendar', accent), gapAfter: 30 },
+    { pill: 2, parts: accent => [{ icon: 'up', color: accent }, { text: formatTokens(tokens.input), isBold: true }], gapAfter: 10 },
+    { pill: 3, parts: accent => [{ icon: 'down', color: accent }, { text: formatTokens(tokens.output), isBold: true }], gapAfter: 10 },
+    { pill: 4, parts: accent => [{ icon: 'layers', color: accent }, { text: formatTokens(tokens.cache), isBold: true }], gapAfter: 30 },
+    { pill: 5, parts: accent => [{ icon: 'coin', color: accent }, { text: formatCost(snapshot.costUsd), isBold: true }], gapAfter: 0 },
   ]
-  const { pills: colors } = PALETTES[style.theme]
+
+  if (style.showUpdated && snapshot.limits.length > 0) {
+    const seven = contents[1]
+
+    if (seven !== undefined) {
+      seven.gapAfter = 0
+    }
+
+    contents.splice(2, 0, {
+      parts: () => [{ icon: 'refresh', color: muted }, { text: formatAge(snapshot, now), color: muted }],
+      gapAfter: 18,
+    })
+  }
 
   let x = 0
-  const drawn = contents.map((content, index) => {
-    const { background, accent } = colors[index] ?? { background: 'none', accent: 'currentColor' }
+  const drawn = contents.map(content => {
+    const { background, accent } = (content.pill === undefined ? undefined : colors[content.pill]) ?? {
+      background: 'none',
+      accent: muted,
+    }
     const { svg, width } = drawPill(content.parts(accent), background, x, style)
     x += width + content.gapAfter
 

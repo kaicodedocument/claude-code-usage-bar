@@ -1,6 +1,6 @@
 {
   "name": "usage-bar",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A band above the prompt: 5h and 7d rate-limit windows, session tokens and cost",
   "types": "./types/index.d.ts",
   "author": {
@@ -40,6 +40,12 @@
       "type": "boolean",
       "title": "Count cache writes as input",
       "description": "On, the up arrow is uncached input plus cache writes. Off, it is uncached input alone and cache writes are counted with cache reads.",
+      "default": true
+    },
+    "showUpdated": {
+      "type": "boolean",
+      "title": "Show reading age",
+      "description": "Show how long ago the rate-limit reading was taken, after the 7d pill.",
       "default": true
     }
   }

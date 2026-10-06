@@ -2,6 +2,13 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.0 - 2026-10-06
+
+- The bar now shows how long ago the rate-limit reading was taken, as a refresh mark after the `7d` pill: `now`, `3m`, `1h 5m`.
+- Added the `showUpdated` option to leave the mark out.
+- The README is now titled with the repository's name, and its screenshots show the reading-age mark.
+- Expanded the "When it updates" section of the README with the reading age and what to expect with one, several or no active sessions.
+
 ## 0.2.2 - 2026-10-06
 
 Documentation only; the mod's behavior is unchanged.

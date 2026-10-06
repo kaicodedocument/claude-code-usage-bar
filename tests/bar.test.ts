@@ -45,7 +45,7 @@ test('the band shows the windows, tokens and cost on each surface', async ($, on
     },
   })
 
-  const line = '5h 80% left (2h 40m) | 7d 42% left (1d 7h) | in 15.6k | out 3.0k | cache 954.2k | $4.32'
+  const line = '5h 80% left (2h 40m) | 7d 42% left (1d 7h) | updated now | in 15.6k | out 3.0k | cache 954.2k | $4.32'
   const terminal = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect((await terminal.find({ type: 'Text' }))?.text).toBe(line)
   await terminal.unmount()
@@ -141,7 +141,7 @@ test('options set the theme, the cache-write split and the fade time', { options
 
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
   const svg = await ui.find({ type: 'Svg' })
-  expect(svg?.props.alt).toContain('5h 80% left (2h 40m) | 7d --% left (--) | in 600 | out 3.0k | cache 16.0k')
+  expect(svg?.props.alt).toContain('5h 80% left (2h 40m) | 7d --% left (--) | updated now | in 600 | out 3.0k | cache 16.0k')
   expect(String(svg?.props.source)).toContain('#1f3a2e')
   expect(String(svg?.props.source)).not.toContain('#cfe3d8')
 
@@ -150,6 +150,24 @@ test('options set the theme, the cache-write split and the fade time', { options
   // No timer runs in this test, so a fresh mount stands for the next redraw.
   await clock.advance(2 * 60_000)
   const later = await $.ui.mount({ ...BAND, surface: 'desktop' })
-  expect((await later.find({ type: 'Svg' }))?.props.alt).toContain('5h ~80% left')
+  const faded = await later.find({ type: 'Svg' })
+  expect(faded?.props.alt).toContain('5h ~80% left')
+  expect(faded?.props.alt).toContain('updated 2m ago')
   await later.unmount()
+})
+
+test('showUpdated off leaves the reading age out', { options: { showUpdated: false } }, async ($, on) => {
+  mock.clock(on, { now: NOW })
+  mock.store(on)
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+
+  await $.session.measure({
+    context: { window: 200_000 },
+    rateLimits: [{ kind: 'five_hour', percentUsed: 20, resetsAt: '2026-10-06T14:40:00Z' }],
+    changed: ['rateLimits'],
+  })
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text' }))?.text).not.toContain('updated')
+  await ui.unmount()
 })
