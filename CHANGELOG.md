@@ -2,6 +2,14 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.3 - 2026-10-06
+
+Documentation only; the mod's behavior is unchanged.
+
+- Moved Requirements and Install to the top of the README, ahead of the reference sections.
+- Added an "Update and uninstall" section.
+- Added `repository` and `homepage` to `plugin.json`.
+
 ## 0.3.2 - 2026-10-06
 
 Documentation only; the mod's behavior is unchanged.

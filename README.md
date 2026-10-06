@@ -14,53 +14,6 @@ Both show the default palette. A darker one is chosen with the [`theme` option](
 
 > **Early access.** Claude Code's mod (function hooks) API may change between releases, and a Claude Code update can break this mod. See [Requirements](#requirements) for what it has been used on.
 
-## What it shows
-
-| Item | Meaning |
-| --- | --- |
-| `5h`, `7d` | Allowance left in the window, as a bar and a percentage |
-| Vertical mark on the bar | Share of the window's time that is left. Fill past the mark means the allowance is lasting longer than the clock |
-| Clock | Time until the window resets |
-| Refresh mark | How long ago the two percentages were read. See [When it updates](#when-it-updates) |
-| Up arrow | Input tokens this session: uncached input plus cache writes (see `countCacheWrites`) |
-| Down arrow | Output tokens this session |
-| Layers | Tokens read from the prompt cache this session |
-| Coin | Session cost in US dollars, as `/cost` totals it |
-
-The bar turns orange at 30% left and red at 10% left. A reading older than 10 minutes is drawn faded. All three are [configurable](#configuration).
-
-## When it updates
-
-The mod never queries Anthropic's servers. Claude Code hands it the rate-limit figures that came back with the last model response, and each figure on the bar refreshes on its own trigger:
-
-| Figure | Updates |
-| --- | --- |
-| `5h` / `7d` percentage and bar | When a model response comes back in this session, or within about a minute of one coming back in any other local session |
-| Reading age (the refresh mark after `7d`) | Every 60 seconds; back to `now` when a new reading arrives |
-| Reset countdown and the vertical mark | Every 60 seconds, from the clock |
-| Token counts | At the end of each turn in this session |
-| Cost | At the end of each turn in this session |
-
-### The reading age
-
-The mark after the `7d` pill says how long ago the percentages were read: `now` under a minute, then `3m`, `1h 5m` and so on. It is the quickest way to tell whether the percentages can be trusted.
-
-- `now` or a few minutes: the percentages are current.
-- More than 10 minutes (the `staleMinutes` option): the percentages are also drawn faded.
-- `--`: there is a reading but its time is unknown, which happens in a session that has not had a response of its own yet and found none shared by another session.
-
-Set `showUpdated` to `false` to leave the mark out.
-
-### What this means in practice
-
-- **One session in use.** Its percentages update after every reply, so they are at most one turn old.
-- **Several sessions open.** Whenever any of them gets a reply, the others pick up the new percentages within about a minute, without sending anything.
-- **Every session idle.** Nothing updates. The reading age keeps counting up and the percentages fade after 10 minutes. The countdown keeps moving, because it comes from the clock.
-- **Usage outside Claude Code.** What you use on claude.ai or the mobile app is not seen until a local session gets its next reply.
-- **A window resets while idle.** The bar still shows the percentage from before the reset, faded, until the next reply. The true figure is then close to 100% left.
-
-To refresh on demand, send any message in any local session.
-
 ## Requirements
 
 - Claude Code with mods (function hooks) available. Written against 2.1.288.
@@ -83,11 +36,38 @@ Name the folder in the `env` block of `~/.claude/settings.json`, then start a ne
 }
 ```
 
+If the variable already names other folders, add this one after a `:` (`;` on Windows).
+
 To try it in one terminal session only:
 
 ```bash
 claude --plugin-dir ~/.claude/mods/usage-bar
 ```
+
+## Update and uninstall
+
+To update, pull and start a new session:
+
+```bash
+git -C ~/.claude/mods/usage-bar pull
+```
+
+To uninstall, remove `CLAUDE_CODE_PLUGIN_DIRS` (or this folder from it) and any `pluginConfigs["usage-bar"]` entry from `~/.claude/settings.json`, then delete the folder. Sessions already open keep the bar until they are restarted.
+
+## What it shows
+
+| Item | Meaning |
+| --- | --- |
+| `5h`, `7d` | Allowance left in the window, as a bar and a percentage |
+| Vertical mark on the bar | Share of the window's time that is left. Fill past the mark means the allowance is lasting longer than the clock |
+| Clock | Time until the window resets |
+| Refresh mark | How long ago the two percentages were read. See [When it updates](#when-it-updates) |
+| Up arrow | Input tokens this session: uncached input plus cache writes (see `countCacheWrites`) |
+| Down arrow | Output tokens this session |
+| Layers | Tokens read from the prompt cache this session |
+| Coin | Session cost in US dollars, as `/cost` totals it |
+
+The bar turns orange at 30% left and red at 10% left. A reading older than 10 minutes is drawn faded. All three are [configurable](#configuration).
 
 ## Configuration
 
@@ -129,6 +109,38 @@ With `"theme": "dark"`:
 - Type `/usage-bar` to show it again, or to toggle.
 
 The choice lasts for the session; a new session starts with the bar shown.
+
+## When it updates
+
+The mod never queries Anthropic's servers. Claude Code hands it the rate-limit figures that came back with the last model response, and each figure on the bar refreshes on its own trigger:
+
+| Figure | Updates |
+| --- | --- |
+| `5h` / `7d` percentage and bar | When a model response comes back in this session, or within about a minute of one coming back in any other local session |
+| Reading age (the refresh mark after `7d`) | Every 60 seconds; back to `now` when a new reading arrives |
+| Reset countdown and the vertical mark | Every 60 seconds, from the clock |
+| Token counts | At the end of each turn in this session |
+| Cost | At the end of each turn in this session |
+
+### The reading age
+
+The mark after the `7d` pill says how long ago the percentages were read: `now` under a minute, then `3m`, `1h 5m` and so on. It is the quickest way to tell whether the percentages can be trusted.
+
+- `now` or a few minutes: the percentages are current.
+- More than 10 minutes (the `staleMinutes` option): the percentages are also drawn faded.
+- `--`: there is a reading but its time is unknown, which happens in a session that has not had a response of its own yet and found none shared by another session.
+
+Set `showUpdated` to `false` to leave the mark out.
+
+### What this means in practice
+
+- **One session in use.** Its percentages update after every reply, so they are at most one turn old.
+- **Several sessions open.** Whenever any of them gets a reply, the others pick up the new percentages within about a minute, without sending anything.
+- **Every session idle.** Nothing updates. The reading age keeps counting up and the percentages fade after 10 minutes. The countdown keeps moving, because it comes from the clock.
+- **Usage outside Claude Code.** What you use on claude.ai or the mobile app is not seen until a local session gets its next reply.
+- **A window resets while idle.** The bar still shows the percentage from before the reset, faded, until the next reply. The true figure is then close to 100% left.
+
+To refresh on demand, send any message in any local session.
 
 ## Troubleshooting
 
