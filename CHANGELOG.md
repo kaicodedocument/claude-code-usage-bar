@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.2 - 2026-10-06
+
+Documentation only; the mod's behavior is unchanged.
+
+- Replaced the light-theme screenshot with one taken after a few turns, so the token counts and cost are not zero.
+
 ## 0.3.1 - 2026-10-06
 
 Documentation only; the mod's behavior is unchanged.
