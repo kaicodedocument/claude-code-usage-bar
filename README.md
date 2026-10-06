@@ -172,6 +172,16 @@ Everything stays on your machine. The mod makes no network requests, reads and w
 
 It adds one slash command, `/usage-bar`, and draws in one place, the band above the prompt.
 
+Its hooks, all of them:
+
+| Hook | What it does |
+| --- | --- |
+| `session.start` | Registers `/usage-bar`, takes a first reading and starts a one-minute timer. Passes the event on unchanged |
+| `session.measure` | Copies the rate-limit windows and the cost. Passes the event on unchanged |
+| `turn.complete` | Adds the turn's token counts to its totals. Passes the event on unchanged |
+| `command.run`, matched to `usage-bar` only | Answers its own `/usage-bar` command by showing or hiding the bar. It does not see or change any other command |
+| `ui.render`, matched to the band above the prompt only | Draws the bar. It draws nothing else and changes no other part of the interface |
+
 ## Troubleshooting
 
 **The bar does not appear.** Sessions read the setting when they start, so open a new session; restart the app if a new session still has none. In the terminal, set `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1` (see [Requirements](#requirements)). Check that the path in `CLAUDE_CODE_PLUGIN_DIRS` is the folder holding `.claude-plugin/`. `claude --debug` logs a line starting `usage-bar:` when the mod fails to load.

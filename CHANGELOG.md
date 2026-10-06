@@ -6,6 +6,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 The mod's behavior is unchanged.
 
+- Added an icon, and listed every hook the mod registers in the README.
 - `theme` is now a plain text option. The plugin directory does not yet accept an option that lists its allowed values; `"dark"` still selects the dark palette and anything else the light one.
 
 ## 0.3.6 - 2026-10-06

@@ -172,6 +172,16 @@ claude --plugin-dir ~/.claude/mods/usage-bar
 
 它新增一个斜杠命令 `/usage-bar`，只在输入框上方这一处绘制内容。
 
+它注册的全部钩子：
+
+| 钩子 | 作用 |
+| --- | --- |
+| `session.start` | 注册 `/usage-bar`，取一次初始读数，启动一个每分钟的定时器。事件原样传递 |
+| `session.measure` | 记录额度窗口和费用。事件原样传递 |
+| `turn.complete` | 把本轮的 token 数加到累计值里。事件原样传递 |
+| `command.run`，只匹配 `usage-bar` | 响应自己的 `/usage-bar` 命令，显示或隐藏用量条。看不到也不改动其他任何命令 |
+| `ui.render`，只匹配输入框上方的区域 | 绘制用量条。不绘制其他内容，不改动界面的其他部分 |
+
 ## 故障排查
 
 **用量条没有出现。** 会话在启动时读取配置，请新开一个会话；新会话里仍没有就重启应用。在终端里使用时，需要设置 `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`（见[环境要求](#环境要求)）。检查 `CLAUDE_CODE_PLUGIN_DIRS` 指向的是包含 `.claude-plugin/` 的那个目录。mod 加载失败时，`claude --debug` 的日志里会有一行以 `usage-bar:` 开头的记录。
