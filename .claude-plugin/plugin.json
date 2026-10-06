@@ -9,6 +9,9 @@
   "license": "MIT",
   "homepage": "https://github.com/kaicodedocument/claude-code-usage-bar",
   "repository": "https://github.com/kaicodedocument/claude-code-usage-bar",
+  "documentationUrl": "https://github.com/kaicodedocument/claude-code-usage-bar#readme",
+  "supportUrl": "https://github.com/kaicodedocument/claude-code-usage-bar/issues",
+  "privacyPolicyUrl": "https://github.com/kaicodedocument/claude-code-usage-bar/blob/main/PRIVACY.md",
   "keywords": [
     "usage",
     "rate-limit",

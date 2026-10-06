@@ -8,6 +8,7 @@ The mod's behavior is unchanged.
 
 - New icon: a clock whose rim shows the allowance that is left.
 - Clearer description and added keywords in `plugin.json`, for the directory listing.
+- Added `PRIVACY.md`, and documentation, support and privacy links in `plugin.json`.
 
 ## 0.3.7 - 2026-10-06
 
