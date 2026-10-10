@@ -2,7 +2,7 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
-## 0.3.9 - unreleased
+## 0.3.9 - 2026-10-10
 
 Documentation only; the mod's behavior is unchanged.
 
